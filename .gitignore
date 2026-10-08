@@ -1,0 +1,10 @@
+# rehearsal artifacts: self-signed certs, logs, stub output, fake web roots
+.rehearsal/certs/
+.rehearsal/logs/
+.rehearsal/out/
+.rehearsal/root/
+.rehearsal/tmp/
+.rehearsal/acme/
+.rehearsal/site.conf
+.rehearsal/site.main.conf
+.rehearsal/nginx.conf

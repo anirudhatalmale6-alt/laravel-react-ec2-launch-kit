@@ -1,0 +1,13 @@
+[Unit]
+Description=Run the Laravel scheduler every minute
+
+[Timer]
+# Laravel's scheduler expects to be invoked once a minute; it decides
+# internally what is actually due. A cron entry does the same job, but a
+# timer logs to the journal and can be inspected with systemctl.
+OnCalendar=*:0/1
+AccuracySec=10s
+Persistent=false
+
+[Install]
+WantedBy=timers.target

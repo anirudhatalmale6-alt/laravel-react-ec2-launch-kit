@@ -1,0 +1,15 @@
+[Unit]
+Description=Laravel scheduler tick
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/app/current/api
+ExecStart=/usr/bin/php /var/www/app/current/api/artisan schedule:run
+StandardOutput=append:/var/log/app/scheduler.log
+StandardError=append:/var/log/app/scheduler.error.log
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/var/www/app/shared /var/log/app

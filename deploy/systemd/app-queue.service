@@ -1,0 +1,45 @@
+[Unit]
+Description=Laravel queue worker
+After=network.target
+# If the box has no local database this is harmless; if RDS is added later,
+# nothing here needs to change.
+
+[Service]
+User=www-data
+Group=www-data
+Restart=always
+RestartSec=3
+# A worker started before the release symlink exists would hold a dead path
+# for the life of the process.
+WorkingDirectory=/var/www/app/current/api
+
+# --max-time recycles the worker every hour so a slow memory leak in a job
+# cannot grow without bound; --max-jobs does the same by count.
+# --tries=3 with a backoff means a Stripe webhook job that fails on a
+# transient network error is retried rather than dropped on the floor.
+ExecStart=/usr/bin/php /var/www/app/current/api/artisan queue:work \
+    --queue=high,default \
+    --sleep=3 \
+    --tries=3 \
+    --backoff=10,60,300 \
+    --max-time=3600 \
+    --max-jobs=1000 \
+    --timeout=120
+
+# queue:restart writes a timestamp the worker checks between jobs, so it
+# finishes the job in hand and then exits; systemd starts a fresh one with
+# the new code. Never SIGKILL a worker mid-job: the job is lost but already
+# marked reserved, so it neither completes nor retries.
+KillSignal=SIGTERM
+TimeoutStopSec=150
+
+StandardOutput=append:/var/log/app/queue.log
+StandardError=append:/var/log/app/queue.error.log
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/var/www/app/shared /var/log/app
+
+[Install]
+WantedBy=multi-user.target
