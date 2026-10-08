@@ -1,0 +1,38 @@
+[Unit]
+Description=Laravel Reverb websocket server (OctoError chat)
+After=network.target postgresql.service
+
+[Service]
+User=www-data
+Group=www-data
+Restart=always
+RestartSec=3
+WorkingDirectory=/var/www/app/current/backend
+
+# Binds to loopback only. nginx terminates TLS on 443 and proxies wss to
+# here, so 8080 must never be reachable from the internet. The security
+# group does not open it either; this is the second lock on the same door.
+ExecStart=/usr/bin/php /var/www/app/current/backend/artisan reverb:start \
+    --host=127.0.0.1 \
+    --port=8080
+
+# A websocket server holds every open chat connection in memory, so unlike
+# the queue worker it must NOT be recycled on a timer: that would disconnect
+# everyone currently talking. Restart only on failure or on deploy.
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# Each connection is a file descriptor. The default 1024 would cap the whole
+# site at roughly a thousand simultaneous chat users.
+LimitNOFILE=65535
+
+StandardOutput=append:/var/log/app/reverb.log
+StandardError=append:/var/log/app/reverb.error.log
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/var/www/app/shared /var/log/app
+
+[Install]
+WantedBy=multi-user.target

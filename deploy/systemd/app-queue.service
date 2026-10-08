@@ -11,13 +11,13 @@ Restart=always
 RestartSec=3
 # A worker started before the release symlink exists would hold a dead path
 # for the life of the process.
-WorkingDirectory=/var/www/app/current/api
+WorkingDirectory=/var/www/app/current/backend
 
 # --max-time recycles the worker every hour so a slow memory leak in a job
 # cannot grow without bound; --max-jobs does the same by count.
 # --tries=3 with a backoff means a Stripe webhook job that fails on a
 # transient network error is retried rather than dropped on the floor.
-ExecStart=/usr/bin/php /var/www/app/current/api/artisan queue:work \
+ExecStart=/usr/bin/php /var/www/app/current/backend/artisan queue:work \
     --queue=high,default \
     --sleep=3 \
     --tries=3 \
