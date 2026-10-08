@@ -11,3 +11,9 @@
 
 # the client repo is PRIVATE; this workspace repo is PUBLIC. never commit it.
 client-repo/
+
+# client secrets: NEVER commit. this workspace repo is public.
+secrets/
+.env
+*.env
+!deploy/env/*.example
