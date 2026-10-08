@@ -8,3 +8,6 @@
 .rehearsal/site.conf
 .rehearsal/site.main.conf
 .rehearsal/nginx.conf
+
+# the client repo is PRIVATE; this workspace repo is PUBLIC. never commit it.
+client-repo/
