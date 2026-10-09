@@ -49,10 +49,23 @@ say "account $(aws sts get-caller-identity --query Account --output text), regio
 # ---------------------------------------------------------------- safety
 # The brief said an instance was already waiting and the client later said he
 # has never touched AWS. Rather than believe either, look.
-EXISTING=$(aws ec2 describe-instances --region "$REGION" \
+# `|| true` here would be a trap: a DENIED describe-instances returns an empty
+# string exactly like a genuinely empty account, and the script would then
+# announce "the account is empty" having learned nothing. An authorization
+# failure is not an answer, so it stops instead.
+if ! EXISTING=$(aws ec2 describe-instances --region "$REGION" \
   --filters "Name=instance-state-name,Values=pending,running,stopping,stopped" \
   --query 'Reservations[].Instances[].[InstanceId,InstanceType,State.Name,Tags[?Key==`Name`].Value|[0]]' \
-  --output text || true)
+  --output text 2>&1); then
+  printf '%s\n' "$EXISTING" | sed 's/^/    /' >&2
+  if printf '%s' "$EXISTING" | grep -q 'service control policy'; then
+    die "EC2 is blocked by an Organizations SCP on this account. No IAM policy,
+       and not even the account root user, can override an SCP deny. The owner
+       of the management account has to change it, or this needs a different
+       AWS account."
+  fi
+  die "cannot list instances, so I cannot tell whether one already exists. Refusing to create one blind."
+fi
 if [[ -n $EXISTING ]]; then
   say "this account ALREADY has instances:"
   printf '%s\n' "$EXISTING" | sed 's/^/    /'
